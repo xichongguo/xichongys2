@@ -21,13 +21,11 @@ jobs:
         with:
           python-version: '3.10'
 
-      # 【已删除“安装依赖”步骤，解决找不到 requirements.txt 的报错】
-
-      # 3. 运行你的 Python 脚本
+      # 3. 运行你的 Python 脚本（已彻底删除安装依赖的步骤）
       - name: 执行yuan.py脚本
         run: python yuan.py
 
-      # 4. 将脚本生成的文件保存下来（运行完环境会销毁，必须上传才能保留文件）
+      # 4. 将脚本生成的文件保存下来
       - name: 上传生成的文件
         uses: actions/upload-artifact@v4
         with:
