@@ -1,0 +1,41 @@
+name: 每日自动运行yuan.py
+
+on:
+  schedule:
+    # 每天北京时间 6:00 自动运行 (注意：必须配合下方的 timezone 使用)
+    - cron: '0 6 * * *'
+    timezone: 'Asia/Shanghai'
+  workflow_dispatch:  # 允许手动点击按钮触发运行（方便测试）
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest  # 在最新的 Ubuntu 环境中运行
+
+    steps:
+      # 1. 拉取你的仓库代码
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      # 2. 配置 Python 环境
+      - name: 配置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'  # 你可以根据需要修改Python版本
+
+      # 3. 安装依赖库
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt  # 如果没有依赖，可以删除这一行
+
+      # 4. 运行你的 Python 脚本
+      - name: 执行yuan.py脚本
+        run: python yuan.py
+
+      # 5. 将脚本生成的文件保存下来（GitHub Actions 运行完会销毁环境，必须上传才能保留文件）
+      - name: 上传生成的文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: output-files  # 在 Actions 页面下载时显示的压缩包名称
+          path: ./*           # 指定要上传的文件路径，这里默认上传根目录下的所有文件
+          retention-days: 5   # 文件保留天数（最长可设90天）
