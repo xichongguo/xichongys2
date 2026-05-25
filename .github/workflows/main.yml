@@ -2,27 +2,32 @@ name: 每日自动运行yuan.py
 
 on:
   schedule:
+    # 每天 UTC 22:00 运行，对应北京时间早上 6:00
     - cron: '0 22 * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # 允许手动点击按钮触发运行（方便测试）
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. 拉取你的仓库代码
       - name: 拉取代码
         uses: actions/checkout@v4
 
+      # 2. 配置 Python 环境
       - name: 配置 Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # 已经删掉了“安装依赖”的步骤
+      # 【已删除“安装依赖”步骤，解决找不到 requirements.txt 的报错】
 
+      # 3. 运行你的 Python 脚本
       - name: 执行yuan.py脚本
         run: python yuan.py
 
+      # 4. 将脚本生成的文件保存下来（运行完环境会销毁，必须上传才能保留文件）
       - name: 上传生成的文件
         uses: actions/upload-artifact@v4
         with:
