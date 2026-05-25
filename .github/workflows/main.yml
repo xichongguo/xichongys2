@@ -1,4 +1,4 @@
-名称namename: 每日自动运行yuan.py
+name: 每日自动运行yuan.py
 
 on:
   schedule:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   run-script:
-    runs-on: ubuntu-latest  # 在最新的 Ubuntu 环境中运行
+    runs-on: ubuntu-latest
 
     steps:
       # 1. 拉取你的仓库代码
@@ -21,7 +21,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      # 3. 安装依赖库（如果没有 requirements.txt，可以删掉下面这3行）
+      # 3. 安装依赖库（如果仓库根目录没有 requirements.txt，可以删掉这3行）
       - name: 安装依赖
         run: |
           python -m pip install --upgrade pip
@@ -31,7 +31,7 @@ jobs:
       - name: 执行yuan.py脚本
         run: python yuan.py
 
-      # 5. 将脚本生成的文件保存下来（GitHub Actions 运行完会销毁环境，必须上传才能保留文件）
+      # 5. 将脚本生成的文件保存下来（运行完环境会销毁，必须上传才能保留文件）
       - name: 上传生成的文件
         uses: actions/upload-artifact@v4
         with:
