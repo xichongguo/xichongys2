@@ -1,31 +1,43 @@
-name: 每日自动运行yuan.py
+name:           保留天数：5
 
+# 触发条件：每当有代码推送到主分支(main/master)时自动运行
 on:
-  schedule:
-    - cron: '0 22 * * *'  # 北京时间每天早上 6:00
+  push:
+    branches: [ "main", "master" ]
+  # 如果你想每天凌晨自动运行一次，可以取消下面这几行的注释
+  # schedule:
+  #   - cron: '0 0 * * *'
+  # 也可以手动在网页上点击运行
   workflow_dispatch:
 
 jobs:
-  run-script:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: ubuntu-latest  # 使用最新的 Ubuntu 虚拟环境
 
     steps:
-      - name: 拉取代码
-        uses: actions/checkout@v4
+    # 1. 拉取你的代码
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: 配置 Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
+    # 2. 设置 Python 环境
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'  # 指定使用 Python 3.10 版本
 
-      # 注意：这里已经没有任何安装依赖的步骤了
+    # 3. 安装依赖（这里就是解决 No module named 'requests' 的关键步骤！）
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: 执行yuan.py脚本
-        run: python yuan.py
+    # 4. 运行你的 yuan.py 脚本
+    - name: Run yuan.py
+      run: python yuan.py
 
-      - name: 上传生成的文件
-        uses: actions/upload-artifact@v4
-        with:
-          name: output-files
-          path: ./*
-          retention-days: 5
+    # 5. (可选) 上传生成的 output.m3u8 文件作为构建产物，方便你下载
+    - name: Upload M3U8 artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: iptv-output
+        path: output.m3u8
