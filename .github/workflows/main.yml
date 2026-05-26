@@ -1,22 +1,22 @@
-name: Run Yuan Script
+name: Auto Update M3U8
 
-# 1. 定义触发条件：代码推送到 main 或 master 分支时自动运行
+# 触发条件：允许手动触发，也可以设置每天定时自动运行
 on:
-  push:
-    branches: [ "main", "master" ]
-  # 允许在网页上手动点击运行
-  workflow_dispatch:
+  workflow_dispatch:  # 允许在 Actions 页面手动点击运行
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 时间 00:00（北京时间早上 8 点）自动运行一次
 
-# 2. 定义任务（jobs）：这是必须包含的顶层属性
 jobs:
   build:
-    # 指定运行环境为最新的 Ubuntu
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 使用最新的 Ubuntu 虚拟环境
 
-    # 3. 定义步骤（steps）：必须放在 jobs 里面的具体任务下
+    # 赋予工作流写入仓库的权限（这是自动推送代码的关键！）
+    permissions:
+      contents: write
+
     steps:
-    # 步骤1：拉取你的代码
-    - name: Checkout code
+    # 步骤1：拉取代码
+    - name: Checkout repository
       uses: actions/checkout@v4
 
     # 步骤2：设置 Python 环境
@@ -25,19 +25,28 @@ jobs:
       with:
         python-version: '3.10'
 
-    # 步骤3：安装依赖库（解决 requests 缺失的问题）
+    # 步骤3：安装依赖库
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 步骤4：运行你的 Python 脚本
+    # 步骤4：运行你的 Python 脚本，生成 output.m3u8
     - name: Run yuan.py
       run: python yuan.py
 
-    # 步骤5：(可选) 上传生成的 output.m3u8 文件，方便你下载
-    - name: Upload M3U8 artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: iptv-output
-        path: output.m3u8
+    # 步骤5：自动将生成的 output.m3u8 提交并推送到仓库
+    - name: Commit and Push output.m3u8
+      run: |
+        # 配置 Git 用户信息（显示为 GitHub Actions 机器人）
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+        # 将生成的文件添加到暂存区
+        git add output.m3u8
+        
+        # 提交更改（如果文件没有变化，git commit 会失败，|| exit 0 保证工作流不报错退出）
+        git commit -m "🤖 自动更新直播源 output.m3u8 [skip ci]" || exit 0
+        
+        # 推送到远程仓库
+        git push
