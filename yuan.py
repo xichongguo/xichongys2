@@ -157,5 +157,5 @@ def fetch_and_save_m3u8(source_url, output_file="output.m3u8"):
 # --- 运行 ---
 if __name__ == "__main__":
     # 请替换为你的实际 M3U 地址
-    LIVE_SOURCE_URL = "http://119.164.222.242:5140/playlist.m3u" 
+    LIVE_SOURCE_URL = "http://114.226.216.63:5140/playlist.m3u" 
     fetch_and_save_m3u8(LIVE_SOURCE_URL)
