@@ -1,64 +1,61 @@
 import requests
 import sys
 
-def fetch_m3u_direct(url, output_file):
-    try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept-Encoding': 'identity'  # 关键：防止服务器返回 gzip 压缩数据导致乱码
-        }
+def fetch_m3u_via_proxy(url, output_file):
+    # 定义几个常用的 CORS 代理 (如果第一个不行，换第二个)
+    proxies = [
+        f"https://corsproxy.io/?{url}",
+        f"https://api.codetabs.com/v1/proxy?quest={url}"
+    ]
 
-        print(f"正在获取直播源: {url}")
-        response = requests.get(url, headers=headers, timeout=15)
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    }
 
-        # --- 核心修复逻辑开始 ---
-        content = None
+    content = None
+    used_proxy = ""
 
-        # 策略1：优先尝试 GBK/GB2312 (国内网站最常用的中文编码)
+    # 循环尝试不同的代理
+    for proxy_url in proxies:
         try:
-            content = response.content.decode('gbk')
-            print("🔍 使用 GBK 编码解码成功")
-        except (UnicodeDecodeError, LookupError):
-            pass
+            print(f"🚀 正在尝试通过代理获取: {proxy_url[:50]}...")
+            response = requests.get(proxy_url, headers=headers, timeout=15)
 
-        # 策略2：如果 GBK 失败，尝试 UTF-8
-        if not content:
-            try:
-                content = response.content.decode('utf-8')
-                print("🔍 使用 UTF-8 编码解码成功")
-            except UnicodeDecodeError:
-                pass
+            if response.status_code == 200:
+                used_proxy = proxy_url
+                # --- 核心修复：强制使用 GBK 解码 ---
+                # 国内老旧接口通常使用 GBK 或 GB2312 编码
+                try:
+                    content = response.content.decode('gbk')
+                    print("✅ 使用 GBK 编码解码成功！")
+                except UnicodeDecodeError:
+                    # 如果 GBK 失败，回退到自动检测
+                    response.encoding = response.apparent_encoding
+                    content = response.text
+                    print(f"⚠️ GBK 失败，已切换至自动检测编码: {response.encoding}")
 
-        # 策略3：最后兜底，使用 apparent_encoding (自动检测)
-        if not content:
-            try:
-                response.encoding = response.apparent_encoding
-                content = response.text
-                print(f"🔍 使用自动检测编码 ({response.encoding}) 解码")
-            except Exception:
-                pass
+                break  # 获取成功，跳出循环
+            else:
+                print(f"⚠️ 代理返回状态码: {response.status_code}，尝试下一个...")
 
-        # 如果以上都失败，使用 errors='ignore' 强制转换，防止报错中断
-        if not content:
-            content = response.content.decode('utf-8', errors='ignore')
-            print("⚠️ 所有编码尝试失败，已强制忽略错误字符")
-        # --- 核心修复逻辑结束 ---
+        except Exception as e:
+            print(f"❌ 当前代理连接失败: {e}")
+            continue
 
-        # 写入文件 (必须显式指定 utf-8，确保 GitHub 仓库显示正常)
+    # 写入文件
+    if content:
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(content)
+        print(f"💾 文件已成功保存为: {output_file}")
+    else:
+        # 如果所有代理都失败了，抛出异常让 Actions 变红
+        raise Exception("所有代理均无法连接到目标地址，请检查源链接是否失效。")
 
-        print(f"✅ 获取成功！文件已保存为: {output_file}")
-        # 打印前几行确认是否正常
-        print("--- 预览前3行 ---")
-        for line in content.split('\n')[:3]:
-            print(line)
+# 你的原始目标地址
+target_url = "http://www.52top.com.cn:678/downloads/migu.txt"
 
-    except Exception as e:
-        print(f"❌ 发生致命错误: {e}")
-        # 让 Actions 知道出错了，变红而不是假绿
-        sys.exit(1)
-
-# 你的链接
-url = "http://www.52top.com.cn:678/downloads/migu.txt"
-fetch_m3u_direct(url, "migu.m3u")
+try:
+    fetch_m3u_via_proxy(target_url, "migu.m3u")
+except Exception as e:
+    print(f"\n🔴 致命错误: {e}")
+    sys.exit(1)  # 强制退出并报错
