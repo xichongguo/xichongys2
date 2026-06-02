@@ -2,15 +2,18 @@ name: 自动更新直播源
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天 UTC 0点（北京时间早上8点）运行一次
-  workflow_dispatch:      # 允许在网页上手动点击运行
+    - cron: '0 0 * * *'  # 每天 UTC 0点（北京时间早上8点）运行
+  workflow_dispatch:      # 允许手动触发
 
 jobs:
   update-m3u:
     runs-on: ubuntu-latest
+    # 赋予工作流写入仓库的权限（这是最关键的一步！）
+    permissions:
+      contents: write
 
     steps:
-      # 1. 检出代码（必须使用默认配置，保留 GITHUB_TOKEN 凭据）
+      # 1. 检出代码（使用默认配置，不要加 persist-credentials: false）
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -26,7 +29,7 @@ jobs:
           pip install requests
           python fetch_m3u.py
 
-      # 4. 自动提交并推送生成的 m3u 文件到仓库
+      # 4. 强制重置远程地址并提交推送
       - name: Commit and push if changed
         run: |
           git config --global user.name 'github-actions[bot]'
@@ -36,8 +39,9 @@ jobs:
           # 只有当文件有变动时才提交
           if ! git diff --quiet && ! git diff --staged --quiet; then
             git commit -m "Auto update migu.m3u"
-            # 核心：使用 GITHUB_TOKEN 强制进行身份验证推送
-            git push https://${{ secrets.GITHUB_TOKEN }}@github.com/xichongguo/xichongys2.git HEAD:main
+            # 核心改动：先强制设置带有 GITHUB_TOKEN 的远程仓库地址，再推送
+            git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/xichongguo/xichongys2.git
+            git push origin HEAD:main
           else
             echo "文件没有变动，跳过提交。"
           fi
