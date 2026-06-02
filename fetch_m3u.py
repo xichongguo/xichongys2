@@ -6,7 +6,7 @@ def fetch_m3u_direct(url, output_file):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
         
-        # 加上 flush=True 可以让打印内容在日志或终端中实时显示
+        # 加上 flush=True 让 GitHub Actions 的日志能实时打印出来
         print(f"正在获取直播源: {url}", flush=True)
         
         response = requests.get(url, headers=headers, timeout=10)
@@ -22,12 +22,15 @@ def fetch_m3u_direct(url, output_file):
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(m3u_content)
             
-        print(f"✅ 获取成功！m3u 文件已保存为: {output_file}")
+        print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)
 
     except requests.exceptions.RequestException as e:
-        print(f"❌ 网络请求发生错误: {e}")
+        print(f"❌ 网络请求发生错误: {e}", flush=True)
+        # 在 CI 环境中，如果抓取失败，最好让脚本以非 0 状态退出，方便排查
+        exit(1)
     except Exception as e:
-        print(f"❌ 发生未知错误: {e}")
+        print(f"❌ 发生未知错误: {e}", flush=True)
+        exit(1)
 
 if __name__ == '__main__':
     # 替换成你的直播源链接
