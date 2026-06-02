@@ -1,47 +1,41 @@
-name: 自动更新直播源
+name: Update M3U List
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天 UTC 0点（北京时间早上8点）运行
+    - cron: '0 */6 * * *' # 每6小时运行一次，你可以按需修改
   workflow_dispatch:      # 允许手动触发
+
+# 【核心修复】设置环境变量，强制 Actions 使用 Node.js 24 兼容模式
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   update-m3u:
-    runs-on: ubuntu-latest
-    # 赋予工作流写入仓库的权限（这是最关键的一步！）
-    permissions:
-      contents: write
+    runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
 
     steps:
-      # 1. 检出代码（使用默认配置，不要加 persist-credentials: false）
-      - name: Checkout code
+      # 步骤 1: 检出代码 (使用最新版 v4)
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. 设置 Python 环境
+      # 步骤 2: 设置 Python 环境 (使用最新版 v5 如果可用，或者保持 v4 但配合上面的 env)
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # 建议升级到 v5
         with:
           python-version: '3.10'
 
-      # 3. 安装依赖并运行 Python 脚本
+      # 步骤 3: 安装依赖并运行脚本
       - name: Install dependencies and run script
         run: |
           pip install requests
           python fetch_m3u.py
 
-      # 4. 强制重置远程地址并提交推送
+      # 步骤 4: 提交更改 (如果需要自动保存结果)
       - name: Commit and push if changed
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add migu.m3u
-          
-          # 只有当文件有变动时才提交
-          if ! git diff --quiet && ! git diff --staged --quiet; then
-            git commit -m "Auto update migu.m3u"
-            # 核心改动：先强制设置带有 GITHUB_TOKEN 的远程仓库地址，再推送
-            git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/xichongguo/xichongys2.git
-            git push origin HEAD:main
-          else
-            echo "文件没有变动，跳过提交。"
-          fi
+          git add .
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto update m3u list"
+          git push
