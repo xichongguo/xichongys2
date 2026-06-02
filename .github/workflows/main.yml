@@ -1,41 +1,36 @@
-name: Update M3U List
+name: Update M3U Playlist
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # 每6小时运行一次，你可以按需修改
+    - cron: '0 */6 * * *' # 每6小时运行一次
   workflow_dispatch:      # 允许手动触发
-
-# 【核心修复】设置环境变量，强制 Actions 使用 Node.js 24 兼容模式
-env:
-  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   update-m3u:
     runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
 
     steps:
-      # 步骤 1: 检出代码 (使用最新版 v4)
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 步骤 2: 设置 Python 环境 (使用最新版 v5 如果可用，或者保持 v4 但配合上面的 env)
       - name: Set up Python
-        uses: actions/setup-python@v5 # 建议升级到 v5
+        uses: actions/setup-python@v5 # 【关键】升级到 v5 以支持更新的 Node.js 环境
         with:
           python-version: '3.10'
 
-      # 步骤 3: 安装依赖并运行脚本
-      - name: Install dependencies and run script
+      - name: Install dependencies
         run: |
           pip install requests
+
+      - name: Run fetch script
+        run: |
+          # 设置环境变量以兼容旧版 Node.js 动作（如果仍有警告）
+          export ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true
           python fetch_m3u.py
 
-      # 步骤 4: 提交更改 (如果需要自动保存结果)
       - name: Commit and push if changed
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add .
-          git diff --quiet && git diff --staged --quiet || git commit -m "Auto update m3u list"
-          git push
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update m3u playlist" && git push)
