@@ -9,28 +9,23 @@ jobs:
   update-m3u:
     runs-on: ubuntu-latest # 使用最新的 Ubuntu 运行器
 
+    # 【核心修复】添加环境变量，强制启用新版 Node.js 支持
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # 【关键】升级到 v5 以支持更新的 Node.js 环境
+        uses: actions/setup-python@v5 # 建议升级到 v5
         with:
           python-version: '3.10'
 
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install requests
 
       - name: Run fetch script
-        run: |
-          # 设置环境变量以兼容旧版 Node.js 动作（如果仍有警告）
-          export ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true
-          python fetch_m3u.py
-
-      - name: Commit and push if changed
-        run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add .
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update m3u playlist" && git push)
+        run: python fetch_m3u.py
