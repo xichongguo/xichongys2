@@ -1,44 +1,39 @@
-name: Fetch M3U Playlist
+name: 自动更新直播源
 
-# 定义触发条件
 on:
   schedule:
-    # 每天北京时间 00:00 自动运行 (GitHub 默认使用 UTC 时间，这里 16:00 对应北京时间 00:00)
-    - cron: '0 16 * * *'
-  # 允许手动点击按钮触发
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # 每天 UTC 0点运行一次
+  workflow_dispatch:      # 允许手动触发测试
 
-# 定义具体的工作任务
 jobs:
-  fetch-m3u:
+  update-m3u:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. 拉取你的仓库代码
-      - name: Checkout repository
+      # 1. 检出你的代码仓库
+      - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # 必须加上这个，否则后面无法推送代码
+          persist-credentials: false 
 
       # 2. 设置 Python 环境
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # 3. 安装 requests 依赖库
-      - name: Install dependencies
+      # 3. 安装依赖并运行你的脚本
+      - name: Install dependencies and run script
         run: |
-          python -m pip install --upgrade pip
           pip install requests
+          python fetch_m3u.py
 
-      # 4. 运行你的 Python 脚本 (文件名必须与第一步创建的文件名一致)
-      - name: Run fetch script
-        run: python -u fetch_m3u.py
-
-      # 5. 将生成的 m3u 文件提交并推送到 GitHub 仓库
-      - name: Commit and push changes
+      # 4. 自动提交并推送生成的 m3u 文件到仓库
+      - name: Commit and push if changed
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add migu.m3u
           # 只有当文件有变动时才提交，避免无意义的空提交
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update migu.m3u" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto update migu.m3u" && git push https://${{ secrets.GITHUB_TOKEN }}@github.com/xichongguo/xichongys2.git HEAD:main)
