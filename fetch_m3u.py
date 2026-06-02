@@ -3,7 +3,41 @@ import sys
 import os
 
 def fetch_m3u_direct(url, output_file):
-    print(f"正在获取直播源: {url}", flush=True)
+    print(f"正在获取直播源: {url}", flush=True)import requests
+
+def fetch_m3u_direct(url, output_file):
+    try:
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+        
+        print(f"正在获取直播源: {url}")
+        response = requests.get(url, headers=headers, timeout=10)
+        
+        # 1. 增加 HTTP 状态码检查（如 404, 500 等错误）
+        response.raise_for_status()
+        
+        # 2. 优化编码处理：如果自动识别失败或不准，可以手动兜底指定为 utf-8
+        response.encoding = response.apparent_encoding or 'utf-8'
+        m3u_content = response.text
+        
+        # 写入文件
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(m3u_content)
+            
+        print(f"✅ 获取成功！m3u 文件已保存为: {output_file}")
+
+    except requests.exceptions.RequestException as e:
+        # 3. 专门捕获 requests 相关的网络异常
+        print(f"❌ 网络请求发生错误: {e}")
+    except Exception as e:
+        # 捕获其他未知异常
+        print(f"❌ 发生未知错误: {e}")
+
+if __name__ == '__main__':
+    # 替换成你的链接
+    url = "http://www.52top.com.cn:678/downloads/migu.txt"
+    fetch_m3u_direct(url, "migu.m3u")
     
     # 强制禁用代理，避免因为错误的环境变量导致连接失败
     # 如果确实需要代理，请移除 proxies={'http': None, 'https': None} 并配置正确的代理
@@ -19,21 +53,22 @@ def fetch_m3u_direct(url, output_file):
             url, 
             headers=headers,
             代理服务器=代理服务器
-            timeout=(10, 20)  # 连接超时10秒，读取超时20秒(10, 20)  # 连接超时10秒，读取超时20秒
-        ）)
-        response.raise_for_status()raise_for_status()
-        response.encoding = response.apparent_encodingencoding = response.apparent_encoding
+            timeout=(10, 20)  # 连接超时10秒，读取超时20秒
+(10, 20)  # 连接超时10秒，读取超时20秒(10, 20)  # 连接超时10秒，读取超时20秒
+        输入：))
+        response.raise_for_status()raise_for_status()raise_for_status()
+        响应编码 = 响应的感知编码编码 = 响应的感知编码encoding = response.apparent_encodingencoding = response.apparent_encoding
         
-        with open(output_file, 'w', encoding='utf-8') as f:with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(response.text)write(response.text)
+        with open(output_file, 'w', encoding='utf-8') as f:with open(output_file, 'w', encoding='utf-8') as f:with open(output_file, 'w', encoding='utf-8') as f:with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(response.text)write(response.text)write(response.text)write(response.text)
             
-        print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)
+        print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)print(f"✅ 获取成功！m3u 文件已保存为: {output_file}", flush=True)
 
-    except requests.exceptions.ConnectionError as e:except requests.exceptions.ConnectionError as e:
-        print(f"❌ 连接错误: {e}", flush=True)print(f"❌ 连接错误: {e}", flush=True)
-        print("提示: [Errno 101] 通常意味着网络不可达。", flush=True)print("提示: [Errno 101] 通常意味着网络不可达。", flush=True)
-        print("1. 检查是否被防火墙拦截了非标准端口(678)。", flush=True)print("1. 检查是否被防火墙拦截了非标准端口(678)。", flush=True)
-        print("2. 尝试在终端运行 'telnet www.52top.com.cn 678' 测试连通性。", flush=True)print("2. 尝试在终端运行 'telnet www.52top.com.cn 678' 测试连通性。", flush=True)
+    except requests.exceptions.ConnectionError as e:except requests.exceptions.ConnectionError as e:except requests.exceptions.ConnectionError as e:except requests.exceptions.ConnectionError as e:
+        print(f"❌ 连接错误: {e}", flush=True)print(f"❌ 连接错误: {e}", flush=True)print(f"❌ 连接错误: {e}", flush=True)print(f"❌ 连接错误: {e}", flush=True)
+        print("提示: [Errno 101] 通常意味着网络不可达。", flush=True)print("提示: [Errno 101] 通常意味着网络不可达。", flush=True)print("提示: [Errno 101] 通常意味着网络不可达。", flush=True)print("提示: [Errno 101] 通常意味着网络不可达。", flush=True)
+        打印("1. 检查是否被防火墙拦截了非标准端口(678)。", flush=True)打印("1. 检查是否被防火墙拦截了非标准端口(678)。", flush=True)print("1. 检查是否被防火墙拦截了非标准端口(678)。", flush=True)print("1. 检查是否被防火墙拦截了非标准端口(678)。", flush=True)
+        print("2. 尝试在终端运行 'telnet www.52top.com.cn 678' 测试连通性。", flush=True)print("2. 尝试在终端运行 'telnet www.52top.com.cn 678' 测试连通性。", flush=True)print("2. 尝试在终端运行 'telnet www.52top.com.cn 678' 测试连通性。", flush=True)print("2. 尝试在终端运行 'telnet www.52top.com.cn 678' 测试连通性。", flush=True)
         print("3. 如果是在 GitHub Actions 中，可能需要使用支持外部连接的 Runner 或更换源。", flush=True)
         sys.exit(1)
         
