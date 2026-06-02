@@ -1,4 +1,4 @@
-
+import requests
 import sys
 
 def fetch_m3u_direct(url, output_file):
