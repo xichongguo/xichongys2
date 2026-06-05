@@ -1,54 +1,48 @@
 import requests
 import sys
-import time
 
-def fetch_m3u(url, output_file):
-    """
-    通过 Cloudflare Worker 中转获取 M3U 文件
-    :param url: Cloudflare Worker 的地址
-    :param output_file: 保存的文件名
-    """
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-    }
+def fetch_data():
+    # 【重要】请将下面的链接替换为你在 Cloudflare 获取的真实链接
+    # 必须包含 https:// 开头，且以 .workers.dev/ 结尾
+    proxy_url = "https://你的项目名.你的账户名.workers.dev/"
 
-    max_retries = 3
-    content = None
+    print(f"正在尝试通过中转站获取数据: {proxy_url} ...")
 
-    for attempt in range(max_retries):
-        try:
-            print(f"🚀 [尝试 {attempt + 1}/{max_retries}] 正在通过中转站获取数据...")
-            # 这里的 url 应该是你的 Cloudflare Worker 地址
-            response = requests.get(url, headers=headers, timeout=30)
+    try:
+        # 发起请求，设置超时时间为 15 秒
+        response = requests.get(proxy_url, timeout=15)
 
-            if response.status_code == 200:
-                content = response.text
-                print(f"✅ 获取成功！数据长度: {len(content)} 字符")
-                break
-            else:
-                print(f"⚠️ 状态码异常: {response.status_code}")
+        # 检查状态码是否为 200 (成功)
+        if response.status_code == 200:
+            content = response.text
+            print("✅ 获取成功！数据长度:", len(content))
 
-        except Exception as e:
-            print(f"❌ 连接失败: {e}")
-            if attempt < max_retries - 1:
-                print("⏳ 等待 5 秒后重试...")
-                time.sleep(5)
+            # 这里可以将 content 写入文件，例如：
+            with open("migu.txt", "w", encoding="utf-8") as f:
+                f.write(content)
+            print("💾 已保存到 migu.txt")
+            return True
+        else:
+            print(f"❌ 请求失败，状态码: {response.status_code}")
+            return False
 
-    if content:
-        with open(output_file, 'w', encoding='utf-8') as f:
-            f.write(content)
-        print(f"💾 文件已保存至: {output_file}")
-        return True
-    else:
-        print("🔴 致命错误: 所有尝试均失败，请检查 Cloudflare Worker 是否部署正确。")
+    except requests.exceptions.MissingSchema:
+        print("❌ 致命错误：URL 格式不正确！")
+        print("   请检查是否包含了 'https://' 开头。")
+        print(f"   当前填写的 URL: '{proxy_url}'")
+        return False
+
+    except requests.exceptions.ConnectionError as e:
+        print(f"❌ 连接失败 (DNS 解析错误或网络不通): {e}")
+        print("   请检查 Cloudflare Worker 是否已保存并部署。")
+        print("   请检查 URL 是否复制完整，不要包含多余空格。")
+        return False
+
+    except Exception as e:
+        print(f"❌ 发生未知错误: {e}")
         return False
 
 if __name__ == "__main__":
-    # 【重要】请将下面的 URL 替换为你第一步中获得的 Cloudflare Worker 地址
-    WORKER_URL = "https://你的-worker-名称.你的账户名.workers.dev"
-
-    OUTPUT_FILE = "migu_playlist.m3u"
-
-    success = fetch_m3u(WORKER_URL, OUTPUT_FILE)
+    success = fetch_data()
     if not success:
         sys.exit(1)
