@@ -25,11 +25,14 @@ jobs:
       - name: Install dependencies
         run: |
           pip install requests
+          # 安装 Playwright 及其浏览器和系统依赖
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
 
       # 4. 运行更新脚本
       - name: Run update script
         env:
-          # 这里不需要额外配置环境变量，脚本里会处理代理
           TZ: Asia/Shanghai
         run: |
           python fetch_m3u.py
