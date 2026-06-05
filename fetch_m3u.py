@@ -52,7 +52,7 @@ def fetch_m3u_via_proxy(url, output_file):
         raise Exception("所有代理均无法连接到目标地址，请检查源链接是否失效。")
 
 # 你的原始目标地址
-target_url = "http://www.52top.com.cn:678/downloads/migu.txt"
+target_url = "http://fn.gcl.de5.net:5908/gsh950428"
 
 try:
     fetch_m3u_via_proxy(target_url, "migu.m3u")
