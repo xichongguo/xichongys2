@@ -3,14 +3,14 @@ import sys
 import time
 
 def fetch_m3u(url, output_file):
-    # 模拟更真实的浏览器请求头，防止被国内老旧服务器拦截
+    # 模拟真实的浏览器请求头，防止被国内老旧服务器拦截
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         'Accept': '*/*',
         'Connection': 'keep-alive',
-        'Referer': url,  # 添加 Referer 头，很多 IPTV 源需要这个
-        'Host': url.split('/')  # 明确指定 Host 头
-    }<websource>source_group_web_1</websource>
+        'Referer': url,
+        'Host': url.split('/')[2]
+    }
 
     # 尝试直连，并加入重试机制（应对 GitHub 到国内的网络波动）
     max_retries = 3
@@ -19,11 +19,11 @@ def fetch_m3u(url, output_file):
     for attempt in range(max_retries):
         try:
             print(f"🚀 [尝试 {attempt + 1}/{max_retries}] 正在从 GitHub 服务器直连获取: {url}")
-            response = requests.get(url, headers=headers, timeout=30)  # 跨境网络建议超时设长一点
+            response = requests.get(url, headers=headers, timeout=30)
 
             if response.status_code == 200:
                 print("✅ 请求成功！状态码: 200")
-                # 处理编码
+                # 处理编码：国内老旧接口通常使用 GBK 或 GB2312 编码
                 try:
                     content = response.content.decode('gbk')
                     print("✅ 使用 GBK 编码解码成功！")
@@ -50,6 +50,7 @@ def fetch_m3u(url, output_file):
     else:
         return False
 
+# 你的原始目标地址
 target_url = "http://www.52top.com.cn:678/downloads/migu.txt"
 print(f"📡 开始更新播放列表: {target_url}")
 
